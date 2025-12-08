@@ -3,255 +3,449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tüketim Takip Uygulaması</title>
+    <title>Bütçe Takip Uygulaması</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Inter fontunu kullan */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Açık gri arka plan */
+            background-color: #f7f9fb;
         }
         /* Özel kaydırma çubuğu stili */
-        .history-list::-webkit-scrollbar {
-            width: 8px;
+        #transaction-list::-webkit-scrollbar {
+            width: 4px;
         }
-        .history-list::-webkit-scrollbar-track {
-            background: #e2e8f0; /* Açık gri */
-            border-radius: 10px;
-        }
-        .history-list::-webkit-scrollbar-thumb {
-            background: #94a3b8; /* Orta gri */
-            border-radius: 10px;
-        }
-        .history-list::-webkit-scrollbar-thumb:hover {
-            background: #64748b; /* Koyu gri */
+        #transaction-list::-webkit-scrollbar-thumb {
+            background-color: #a0aec0;
+            border-radius: 2px;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 to-indigo-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-2xl transform transition-all duration-300 hover:scale-[1.01]">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-800 mb-6 tracking-tight">
-            <span class="text-blue-600">Beach Bar</span> Tüketim Formu
+<body class="min-h-screen p-4 sm:p-6 flex items-center justify-center">
+
+    <div id="app-container" class="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6 sm:p-8">
+        <!-- Uygulama Başlığı -->
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6 flex items-center">
+            <img id="app-logo" src="https://i.hizliresim.com/2z6du75.png" onerror="this.onerror=null;this.src='https://placehold.co/40x40/5c6bc0/ffffff?text=LOGO'" alt="Uygulama Logosu" class="w-10 h-10 mr-3 rounded-lg" />
+            Bütçe Takip
         </h1>
+        <p class="text-sm text-gray-500 mb-6">Merhaba! Gelir ve giderlerinizi buraya kaydedin. Verileriniz size özel olarak kaydedilecektir.</p>
 
-        <!-- Mesaj Kutusu -->
-        <div id="message-box" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4 text-center transition-opacity duration-300 opacity-0">
-            <span id="message-text"></span>
-        </div>
-
-        <!-- Ürün Butonları Bölümü -->
-        <div class="mb-8" id="product-categories">
-            <!-- Kategoriler buraya JavaScript ile eklenecek -->
-        </div>
-
-        <!-- Tüketim Geçmişi Bölümü -->
-        <div>
-            <h2 class="text-xl md:text-2xl font-semibold text-gray-700 mb-4 border-b pb-2 flex justify-between items-center">
-                Tüketim Geçmişi
-                <button id="clear-history-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 text-sm md:text-base transform hover:scale-105 active:scale-95">
-                    Geçmişi Temizle
-                </button>
-            </h2>
-            <div id="history-list" class="bg-gray-50 p-4 rounded-lg shadow-inner max-h-80 overflow-y-auto history-list">
-                <!-- Tüketim geçmişi buraya JavaScript ile eklenecek -->
-                <p id="no-history-message" class="text-gray-500 text-center italic">Henüz bir tüketim kaydı yok.</p>
+        <!-- Bakiye Özeti -->
+        <div class="bg-indigo-600 text-white p-5 rounded-xl shadow-lg mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="text-sm font-medium opacity-80">Toplam Bakiye</span>
+                    <p id="current-balance" class="text-4xl font-bold mt-1">0.00 ₺</p>
+                </div>
+                <i data-lucide="trending-up" class="w-10 h-10 opacity-70"></i>
             </div>
         </div>
+
+        <!-- Yeni İşlem Formu -->
+        <div class="bg-gray-50 p-5 rounded-xl mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Yeni İşlem Ekle</h2>
+            <div id="auth-status" class="text-xs text-red-500 mb-3 hidden">
+                Kullanıcı kimliği yükleniyor...
+            </div>
+            <div class="flex flex-col space-y-4">
+                <input type="text" id="description-input" placeholder="Açıklama (Örn: Maaş, Kira)"
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       maxlength="50">
+
+                <input type="number" id="amount-input" placeholder="Tutar (Örn: 500.00)"
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       min="0.01" step="0.01">
+
+                <div class="flex space-x-3">
+                    <button id="add-income-btn" data-type="income"
+                            class="flex-1 py-3 px-4 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition duration-200 flex items-center justify-center">
+                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Gelir Ekle
+                    </button>
+                    <button id="add-expense-btn" data-type="expense"
+                            class="flex-1 py-3 px-4 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition duration-200 flex items-center justify-center">
+                        <i data-lucide="minus-circle" class="w-5 h-5 mr-2"></i> Gider Ekle
+                    </button>
+                </div>
+            </div>
+            <p id="error-message" class="text-red-500 text-sm mt-3 hidden">Lütfen geçerli bir açıklama ve pozitif bir tutar girin.</p>
+        </div>
+        
+        <!-- Ay Seçimi Filtresi -->
+        <div class="mb-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-700 flex items-center">
+                <i data-lucide="list-ordered" class="w-5 h-5 mr-2 text-indigo-500"></i>
+                İşlemler
+            </h2>
+            <select id="month-select" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-sm">
+                <!-- Seçenekler JS ile doldurulacak -->
+            </select>
+        </div>
+
+        <!-- İşlemler Listesi -->
+        <div id="transaction-list-container" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <ul id="transaction-list" class="space-y-1 max-h-80 overflow-y-auto p-1">
+                <!-- İşlemler buraya JS ile eklenecek -->
+                <li id="loading-indicator" class="p-4 text-center text-gray-500">İşlemler yükleniyor...</li>
+            </ul>
+        </div>
+        <p id="empty-list-message" class="text-center text-gray-500 mt-4 hidden">Seçili ay için henüz bir işlem eklemediniz.</p>
+        
+        <!-- Kullanıcı Kimliği -->
+        <p class="mt-6 text-xs text-gray-400">
+            Kullanıcı Kimliğiniz: <span id="user-id-display" class="font-mono text-gray-600 break-all">Yükleniyor...</span>
+        </p>
+
     </div>
 
-    <script>
-        // Uygulamanın temel ürün listesi, kategorilere ayrılmış
-        const productCategories = {
-            "Su/Soda": [
-                "Soda", "Büyük su", "Küçük su", "S pellegrino büyük", "S pellegrino küçük"
-            ],
-            "Meşrubatlar": [
-                "Cola", "Cola Zero", "Cola light", "Fanta", "Sprite", 
-                "Fuse tea şeftali", "Fuse tea limon", "Tonik", "Bitter limon", "Mandalina"
-            ],
-            "Biralar": [
-                "Efes", "Corona", "Heineken", "Becks", "Miller", "Guinness"
-            ],
-            "Diğerleri": [
-                "Ayran"
-            ]
-        };
+    <!-- Firebase SDK'ları -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Firebase logging level set to debug for easier troubleshooting
+        setLogLevel('debug');
 
-        // HTML elementlerini seç
-        const productCategoriesContainer = document.getElementById('product-categories');
-        const historyListContainer = document.getElementById('history-list');
-        const clearHistoryBtn = document.getElementById('clear-history-btn');
-        const noHistoryMessage = document.getElementById('no-history-message');
-        const messageBox = document.getElementById('message-box');
-        const messageText = document.getElementById('message-text');
+        // Securely retrieving global variables from the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Mesaj kutusunu gösteren fonksiyon
-        function showMessage(text, type = 'success') {
-            messageText.textContent = text;
-            messageBox.classList.remove('hidden', 'opacity-0', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700');
-            
-            if (type === 'success') {
-                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
-            } else if (type === 'error') {
-                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
-            }
-            
-            messageBox.classList.add('opacity-100'); // Görünür yap
+        let app, db, auth, userId = null;
+        let isAuthReady = false;
+        
+        // State for tracking the currently selected month (initially current month)
+        // Store as a date object representing the first day of the month
+        let currentFilterDate = new Date(); 
+        
+        const descriptionInput = document.getElementById('description-input');
+        const amountInput = document.getElementById('amount-input');
+        const addIncomeBtn = document.getElementById('add-income-btn');
+        const addExpenseBtn = document.getElementById('add-expense-btn');
+        const transactionList = document.getElementById('transaction-list');
+        const currentBalanceDisplay = document.getElementById('current-balance');
+        const errorMsg = document.getElementById('error-message');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const emptyListMsg = document.getElementById('empty-list-message');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const authStatus = document.getElementById('auth-status');
+        const monthSelect = document.getElementById('month-select');
 
-            // Belirli bir süre sonra mesajı gizle
-            setTimeout(() => {
-                messageBox.classList.remove('opacity-100');
-                messageBox.classList.add('opacity-0');
-                setTimeout(() => {
-                    messageBox.classList.add('hidden'); // Tamamen gizle
-                }, 300); // Opaklık geçiş süresi kadar bekle
-            }, 3000); // 3 saniye sonra gizle
+        // --- Date Utility Functions ---
+
+        // Returns a date object set to the first millisecond of the month
+        function getStartOfMonth(date) {
+            const start = new Date(date.getFullYear(), date.getMonth(), 1);
+            start.setHours(0, 0, 0, 0);
+            return start;
         }
 
-        /**
-         * Mevcut tarihi YYYY-MM-DD formatında döndürür.
-         * @returns {string} Geçerli tarih stringi.
-         */
-        function getCurrentDateString() {
+        // Returns a date object set to the last millisecond of the month
+        function getEndOfMonth(date) {
+            const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            end.setHours(23, 59, 59, 999);
+            return end;
+        }
+
+        // Formats the month/year for the selector display
+        function formatMonthYear(date) {
+            const options = { year: 'numeric', month: 'long' };
+            return date.toLocaleDateString('tr-TR', options);
+        }
+
+        // --- UI and State Management ---
+
+        // Simulates a message box for errors/success
+        function showMessage(text, isError = false) {
+            errorMsg.textContent = text;
+            errorMsg.className = isError 
+                ? 'text-red-500 text-sm mt-3 block' 
+                : 'text-green-500 text-sm mt-3 block';
+            if (!isError) {
+                setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+            }
+        }
+        
+        // Populates the month selection dropdown with the last 12 months
+        function populateMonthSelector() {
+            monthSelect.innerHTML = '';
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0'); // Ay 0'dan başlar
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
+            const currentMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
 
-        /**
-         * Günlük sıfırlama kontrolünü yapar ve gerekirse verileri temizler.
-         */
-        function checkAndResetDaily() {
-            const currentDate = getCurrentDateString();
-            const lastResetDate = localStorage.getItem('lastResetDate');
+            for (let i = 0; i < 12; i++) { // Show last 12 months
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const optionText = formatMonthYear(date);
+                const optionValue = `${year}-${month}`;
 
-            // Eğer kaydedilmiş bir tarih yoksa veya tarih bugünden farklıysa
-            if (!lastResetDate || lastResetDate !== currentDate) {
-                localStorage.removeItem('consumptions'); // Tüketim kayıtlarını temizle
-                localStorage.setItem('lastResetDate', currentDate); // Yeni sıfırlama tarihini kaydet
-                renderConsumptionHistory(); // Geçmişi yeniden render et
-                if (lastResetDate) { // Sadece ilk kez açıldığında değil, gün değiştiğinde mesaj göster
-                    showMessage('Günlük tüketim kayıtları sıfırlandı!', 'error'); 
+                const option = document.createElement('option');
+                option.value = optionValue;
+                option.textContent = optionText;
+                
+                // Select the current month by default
+                if (optionValue === currentMonthKey) {
+                    option.selected = true;
                 }
-            }
-        }
 
-        // Tüketim kaydını yerel depolamaya ekle veya güncelle
-        function addConsumption(productName) {
-            // Mevcut tüketim kayıtlarını al (ürün adına göre bir obje olarak saklanacak)
-            const consumptions = JSON.parse(localStorage.getItem('consumptions')) || {};
-
-            // Eğer ürün zaten varsa, sayısını artır ve son tüketim zamanını güncelle
-            if (consumptions[productName]) {
-                consumptions[productName].count++;
-                consumptions[productName].lastConsumed = new Date().toISOString();
-            } else {
-                // Ürün yoksa, yeni bir kayıt oluştur
-                consumptions[productName] = {
-                    count: 1,
-                    lastConsumed: new Date().toISOString()
-                };
+                monthSelect.appendChild(option);
             }
 
-            // Yerel depolamaya kaydet
-            localStorage.setItem('consumptions', JSON.stringify(consumptions));
-
-            // Geçmişi yeniden render et
-            renderConsumptionHistory();
-
-            // Başarılı mesajı göster
-            showMessage(`${productName} kaydedildi! Toplam: ${consumptions[productName].count}`);
+            monthSelect.addEventListener('change', (event) => {
+                const [year, month] = event.target.value.split('-').map(Number);
+                currentFilterDate = new Date(year, month, 1);
+                // Re-setup listener to filter new month's data
+                setupRealtimeListener();
+            });
         }
+        
+        // --- Firebase Functions ---
 
-        // Tüketim geçmişini render et
-        function renderConsumptionHistory() {
-            const consumptions = JSON.parse(localStorage.getItem('consumptions')) || {};
-            historyListContainer.innerHTML = ''; // Mevcut listeyi temizle
-
-            // Eğer hiç kayıt yoksa mesajı göster
-            const hasConsumptions = Object.keys(consumptions).length > 0;
-            if (!hasConsumptions) {
-                noHistoryMessage.classList.remove('hidden');
-                historyListContainer.appendChild(noHistoryMessage);
+        // Firebase and Authentication Initialization
+        async function initializeFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase configuration not found.");
+                authStatus.textContent = 'HATA: Firebase yapılandırması eksik.';
+                authStatus.classList.remove('hidden');
                 return;
-            } else {
-                noHistoryMessage.classList.add('hidden');
             }
 
-            // Kayıtları en son tüketilen tarihe göre sırala
-            const sortedConsumptions = Object.entries(consumptions)
-                .sort(([, a], [, b]) => new Date(b.lastConsumed) - new Date(a.lastConsumed));
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await setPersistence(auth, browserLocalPersistence);
 
-            sortedConsumptions.forEach(([productName, data]) => {
-                const date = new Date(data.lastConsumed);
-                // Tarih ve saati okunabilir formatta göster
-                const formattedDate = date.toLocaleDateString('tr-TR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                const formattedTime = date.toLocaleTimeString('tr-TR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
+                authStatus.textContent = 'Kimlik doğrulanıyor...';
+                authStatus.classList.remove('hidden');
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = userId;
+                        isAuthReady = true;
+                        authStatus.classList.add('hidden');
+                        console.log("Kullanıcı kimliği doğrulandı:", userId);
+                        populateMonthSelector(); // Populate selector after auth
+                        setupRealtimeListener(); // Start listening
+                    } else {
+                        userId = null;
+                        userIdDisplay.textContent = "Anonim Kullanıcı";
+                        isAuthReady = true;
+                        authStatus.textContent = 'Kullanıcı anonim olarak doğrulandı.';
+                        authStatus.classList.remove('hidden');
+                    }
                 });
 
-                const listItem = document.createElement('div');
-                listItem.className = 'bg-white p-3 rounded-lg shadow-sm mb-2 flex justify-between items-center text-gray-700 transform transition-all duration-200 hover:scale-[1.01] hover:shadow-md';
-                listItem.innerHTML = `
-                    <span class="font-medium text-blue-700">${productName} (<span class="font-bold text-lg">${data.count}</span>)</span>
-                    <span class="text-sm text-gray-500">Son: ${formattedDate} ${formattedTime}</span>
-                `;
-                historyListContainer.appendChild(listItem);
+            } catch (error) {
+                console.error("Firebase initialization/authentication error:", error);
+                authStatus.textContent = `Kimlik Doğrulama Hatası: ${error.message}`;
+                authStatus.classList.remove('hidden');
+            }
+        }
+
+        // Returns the collection reference for transactions
+        function getTransactionCollectionRef() {
+            if (!db || !userId) return null;
+            // Private data path: /artifacts/{appId}/users/{userId}/{collectionName}
+            const path = `artifacts/${appId}/users/${userId}/transactions`;
+            return collection(db, path);
+        }
+
+        // Real-time listener for transactions, now filtered by month
+        function setupRealtimeListener() {
+            if (!isAuthReady || !userId) return;
+
+            const transactionsRef = getTransactionCollectionRef();
+            if (!transactionsRef) return;
+            
+            // Calculate start and end date for the selected month filter
+            const startDate = getStartOfMonth(currentFilterDate);
+            const endDate = getEndOfMonth(currentFilterDate);
+
+            // Firestore query: Filter by timestamp range and order by timestamp (newest first)
+            const q = query(
+                transactionsRef, 
+                where("timestamp", ">=", startDate),
+                where("timestamp", "<=", endDate),
+                orderBy("timestamp", "desc")
+            );
+
+            loadingIndicator.classList.remove('hidden');
+            transactionList.innerHTML = ''; 
+
+            onSnapshot(q, (snapshot) => {
+                loadingIndicator.classList.add('hidden');
+                
+                const transactions = [];
+                snapshot.forEach((doc) => {
+                    // Firestore timestamp objects need to be converted to Date for display/manipulation
+                    transactions.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderTransactions(transactions);
+                calculateBalance(transactions);
+
+            }, (error) => {
+                console.error("Error listening to transactions:", error);
+                showMessage("İşlemleri yüklerken bir hata oluştu.", true);
             });
         }
 
-        // Ürün butonlarını kategorilere göre oluştur
-        function createProductButtons() {
-            productCategoriesContainer.innerHTML = ''; // Mevcut içeriği temizle
-            for (const category in productCategories) {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'mb-6'; // Kategori başlıkları arasına boşluk bırak
-                
-                const categoryTitle = document.createElement('h3');
-                categoryTitle.className = 'text-lg md:text-xl font-semibold text-gray-700 mb-3 pb-1 border-b border-gray-300';
-                categoryTitle.textContent = category;
-                categoryDiv.appendChild(categoryTitle);
+        // Calculates the total balance for the displayed transactions
+        function calculateBalance(transactions) {
+            const totalBalance = transactions.reduce((acc, transaction) => {
+                const amount = parseFloat(transaction.amount || 0);
+                if (transaction.type === 'income') {
+                    return acc + amount;
+                } else if (transaction.type === 'expense') {
+                    return acc - amount;
+                }
+                return acc;
+            }, 0);
 
-                const buttonsGrid = document.createElement('div');
-                buttonsGrid.className = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3';
+            currentBalanceDisplay.textContent = `${totalBalance.toFixed(2)} ₺`;
+            currentBalanceDisplay.classList.toggle('text-red-400', totalBalance < 0);
+            currentBalanceDisplay.classList.toggle('text-white', totalBalance >= 0);
+        }
+
+        // Renders the transactions list
+        function renderTransactions(transactions) {
+            transactionList.innerHTML = ''; 
+
+            if (transactions.length === 0) {
+                emptyListMsg.classList.remove('hidden');
+                return;
+            }
+            emptyListMsg.classList.add('hidden');
+
+            transactions.forEach(transaction => {
+                const isIncome = transaction.type === 'income';
+                const sign = isIncome ? '+' : '-';
+                const colorClass = isIncome ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+                const icon = isIncome ? 'trending-up' : 'trending-down';
                 
-                productCategories[category].forEach(product => {
-                    const button = document.createElement('button');
-                    button.textContent = product;
-                    button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-300 text-base md:text-lg transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75';
-                    button.addEventListener('click', () => addConsumption(product));
-                    buttonsGrid.appendChild(button);
-                });
-                categoryDiv.appendChild(buttonsGrid);
-                productCategoriesContainer.appendChild(categoryDiv);
+                // Safely get timestamp and format the date
+                const date = transaction.timestamp ? new Date(transaction.timestamp.toDate()) : new Date();
+                const dateString = date.toLocaleDateString('tr-TR');
+
+                const listItem = document.createElement('li');
+                listItem.className = `p-3 flex items-center justify-between border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition duration-150`;
+                listItem.dataset.id = transaction.id;
+
+                const amountText = `${sign} ${parseFloat(transaction.amount).toFixed(2)} ₺`;
+
+                listItem.innerHTML = `
+                    <div class="flex items-center flex-1 min-w-0">
+                        <div class="p-2 mr-3 rounded-full ${colorClass}">
+                            <i data-lucide="${icon}" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gray-800 font-medium truncate">${transaction.description}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">${dateString}</p>
+                        </div>
+                    </div>
+                    <div class="text-lg font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'} flex items-center ml-2">
+                        ${amountText}
+                        <button class="delete-btn ml-3 p-1 rounded-full text-gray-400 hover:text-red-500 transition duration-150" data-id="${transaction.id}">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                transactionList.appendChild(listItem);
+            });
+            lucide.createIcons(); 
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', handleDeleteTransaction);
+            });
+        }
+        
+        // Handles adding a new transaction
+        async function handleAddTransaction(event) {
+            if (!db || !userId) {
+                showMessage("Uygulama henüz hazır değil, lütfen bekleyin.", true);
+                return;
+            }
+
+            const type = event.currentTarget.dataset.type; 
+            const description = descriptionInput.value.trim();
+            const amount = parseFloat(amountInput.value);
+
+            if (!description || isNaN(amount) || amount <= 0) {
+                showMessage("Lütfen geçerli bir açıklama ve pozitif bir tutar girin.", true);
+                return;
+            }
+            
+            errorMsg.classList.add('hidden'); 
+            
+            try {
+                const transactionData = {
+                    description,
+                    amount: amount.toFixed(2),
+                    type,
+                    timestamp: serverTimestamp() 
+                };
+
+                const transactionsRef = getTransactionCollectionRef();
+                await addDoc(transactionsRef, transactionData);
+
+                descriptionInput.value = '';
+                amountInput.value = '';
+                showMessage(`${type === 'income' ? 'Gelir' : 'Gider'} başarıyla eklendi!`);
+
+            } catch (e) {
+                console.error("Error adding transaction:", e);
+                showMessage("İşlem eklenirken bir hata oluştu. Tekrar deneyin.", true);
             }
         }
 
-        // Geçmişi temizle butonu işlevi
-        clearHistoryBtn.addEventListener('click', () => {
-            // Kullanıcıya onay sorusu yerine, bir modal veya özel bir onay mekanizması kullanabiliriz.
-            // Şimdilik basitçe temizleyelim ve mesaj gösterelim.
-            localStorage.removeItem('consumptions');
-            // Geçmişi manuel temizlediğimizde, sıfırlama tarihini de güncelleyelim ki hemen tekrar sıfırlanmasın.
-            localStorage.setItem('lastResetDate', getCurrentDateString()); 
-            renderConsumptionHistory();
-            showMessage('Tüm geçmiş temizlendi!', 'error'); // Temizleme için kırmızı mesaj
+        // Handles deleting a transaction
+        async function handleDeleteTransaction(event) {
+            if (!db || !userId) return;
+
+            const transactionId = event.currentTarget.dataset.id;
+            
+            console.log(`Deleting transaction: ${transactionId}`);
+
+            try {
+                const transactionsRef = getTransactionCollectionRef();
+                const transactionDocRef = doc(transactionsRef, transactionId);
+                await deleteDoc(transactionDocRef);
+                showMessage("İşlem başarıyla silindi.", false);
+
+            } catch (e) {
+                console.error("Error deleting transaction:", e);
+                showMessage("İşlem silinirken bir hata oluştu. Tekrar deneyin.", true);
+            }
+        }
+
+
+        // Event listeners
+        addIncomeBtn.addEventListener('click', handleAddTransaction);
+        addExpenseBtn.addEventListener('click', handleAddTransaction);
+
+        // Start the application
+        initializeFirebase();
+        
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
         });
 
-        // Uygulama yüklendiğinde çalışacak fonksiyonlar
-        window.onload = () => {
-            checkAndResetDaily(); // Günlük sıfırlama kontrolünü yap
-            createProductButtons();
-            renderConsumptionHistory();
-        };
     </script>
 </body>
 </html>
+
